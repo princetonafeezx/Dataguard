@@ -108,3 +108,23 @@ def _merge_loaded_dict(base: dict, loaded: dict) -> tuple[dict, list[str]]:
         except (TypeError, ValueError) as exc:
             raise InputError(f"Invalid value for config key {key!r}: {exc}") from exc
     return out, warnings
+
+def load_config(cwd: str | None = None) -> tuple[dict, Path, list[str]]:
+    config = dict(DEFAULT_CONFIG)
+    config_path = get_config_path(cwd)
+    if not config_path.exists():
+        return config, config_path, []
+
+    try:
+        text = config_path.read_text(encoding="utf-8")
+        loaded = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise InputError(f"Invalid JSON in config file {config_path}: {exc}") from exc
+
+    if not isinstance(loaded, dict):
+        raise InputError(
+            f"Config file must contain a JSON object, not {type(loaded).__name__}."
+        )
+
+    merged, warnings = _merge_loaded_dict(config, loaded)
+    return merged, config_path, warnings
