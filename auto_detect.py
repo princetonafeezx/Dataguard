@@ -57,3 +57,21 @@ def score_as_log(lines: list[str]) -> float:
         if re.search(r"\b[1-5]\d{2}\b", line):
             score += 0.1
     return min(score / line_count, 1.0)
+
+def _parsed_column_counts(lines: list[str], delimiter: str) -> list[int]:
+    counts: list[int] = []
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            row = next(csv.reader(io.StringIO(line, newline=""), delimiter=delimiter))
+        except csv.Error:
+            continue
+        if not row:
+            continue
+        if len(row) == 1 and not (row[0] or "").strip():
+            continue
+        counts.append(len(row))
+    return counts
+
+    
