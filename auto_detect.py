@@ -111,3 +111,12 @@ def score_as_csv(lines: list[str]) -> float:
         scores.append(min(score, 1.0))
     return min(max(scores or [0.0]), 1.0)
 
+def score_as_html(lines: list[str]) -> float:
+    score = 0.0
+    text = "\n".join(lines)
+    if re.search(r"<!DOCTYPE|<html|<body|<div|<span|<p\b", text, re.IGNORECASE):
+        score += 0.55
+    if re.search(r"<script|<a\b|<img\b|</\w+>", text, re.IGNORECASE):
+        score += 0.4
+    # No extra score for bare "<" and ">" (reduces false positives in logs/code)
+    return min(score, 1.0)
