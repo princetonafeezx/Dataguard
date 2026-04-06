@@ -29,3 +29,14 @@ def decode_bytes(raw_bytes: bytes) -> tuple[str, str, list[str]]:
     except UnicodeDecodeError:
         text = payload.decode("latin-1")
         return text, "latin-1", warnings + [_LATIN1_FALLBACK_WARNING]
+
+def read_text_file(path: str) -> tuple[str, InputReadMetadata]:
+    try:
+        with open(path, "rb") as handle:
+            raw_bytes = handle.read()
+    except OSError as exc:
+        raise InputError(f"Could not read file: {path}") from exc
+
+    text, encoding, warnings = decode_bytes(raw_bytes)
+    metadata: InputReadMetadata = {"path": path, "encoding": encoding, "read_warnings": warnings}
+    return text, metadata
