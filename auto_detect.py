@@ -80,3 +80,34 @@ def _row_cells(line: str, delimiter: str) -> list[str]:
     except (csv.Error, StopIteration):
         return []
 
+def score_as_csv(lines: list[str]) -> float:
+    if not lines:
+        return 0.0
+    delimiters = [",", ";", "\t", "|"]
+    scores: list[float] = []
+    for delimiter in delimiters:
+        counts = _parsed_column_counts(lines, delimiter)
+        if len(counts) < 2:
+            continue
+        head = counts[: min(8, len(counts))]
+        if len(set(head)) != 1:
+            continue
+        col_count = head[0]
+        if col_count < 2:
+            continue
+        full_consistent = len(set(counts)) == 1
+        score = 0.3
+        if col_count >= 3:
+            score += 0.15
+        if full_consistent:
+            score += 0.25
+        if len(counts) >= 5:
+            score += 0.1
+        first_cells = _row_cells(lines[0], delimiter)
+        if len(first_cells) == col_count and first_cells:
+            nonempty = [(c or "").strip() for c in first_cells if (c or "").strip()]
+            if nonempty and not all(re.fullmatch(r"-?\d+(?:\.\d+)?", c) for c in nonempty):
+                score += 0.15
+        scores.append(min(score, 1.0))
+    return min(max(scores or [0.0]), 1.0)
+
