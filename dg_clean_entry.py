@@ -19,7 +19,10 @@ def _loaded_dataguard_package_root(module: object) -> Path | None:
             return None
     return None
 
-
+def _purge_dataguard_modules() -> None:
+    for key in list(sys.modules):
+        if key == "dataguard" or key.startswith("dataguard."):
+            del sys.modules[key]
 
 
 
