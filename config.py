@@ -128,3 +128,36 @@ def load_config(cwd: str | None = None) -> tuple[dict, Path, list[str]]:
 
     merged, warnings = _merge_loaded_dict(config, loaded)
     return merged, config_path, warnings
+
+
+def parse_set_arguments(assignments: list[str]) -> dict:
+    updates: dict[str, object] = {}
+    for assignment in assignments:
+        if "=" not in assignment:
+            raise ValueError(f"Expected key=value assignment, got: {assignment}")
+        key, raw_value = assignment.split("=", 1)
+        key = key.strip()
+        raw_value = raw_value.strip()
+        if key not in _KNOWN_KEYS:
+            valid = ", ".join(sorted(_KNOWN_KEYS))
+            raise InputError(f"Unknown config key {key!r}. Valid keys: {valid}.")
+
+        if raw_value.lower() in {"true", "false"}:
+            value: object = raw_value.lower() == "true"
+        else:
+            try:
+                value = int(raw_value)
+            except ValueError:
+                try:
+                    value = float(raw_value)
+                except ValueError:
+                    value = raw_value
+
+        try:
+            updates[key] = coerce_config_value(key, value)
+        except (TypeError, ValueError) as exc:
+            raise InputError(f"Invalid value for config key {key!r}: {exc}") from exc
+
+    return updates
+
+    
