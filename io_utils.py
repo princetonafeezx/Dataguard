@@ -40,3 +40,6 @@ def read_text_file(path: str) -> tuple[str, InputReadMetadata]:
     text, encoding, warnings = decode_bytes(raw_bytes)
     metadata: InputReadMetadata = {"path": path, "encoding": encoding, "read_warnings": warnings}
     return text, metadata
+
+def stdin_has_data() -> bool:
+    return not sys.stdin.isatty()
