@@ -69,3 +69,10 @@ def read_input_text(file_path: str | None = None, use_stdin: bool = False) -> tu
         }
         return text, metadata
     raise InputError("No input provided. Use --file, --input, or pipe data through stdin.")
+
+def write_text_file(path: str, text: str) -> None:
+    try:
+        with open(path, "w", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+    except OSError as exc:
+        raise InputError(f"Could not write file: {path}") from exc
