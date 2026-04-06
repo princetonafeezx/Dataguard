@@ -120,3 +120,18 @@ def score_as_html(lines: list[str]) -> float:
         score += 0.4
     # No extra score for bare "<" and ">" (reduces false positives in logs/code)
     return min(score, 1.0)
+
+def score_as_contacts(lines: list[str]) -> float:
+    score = 0.0
+    text = "\n".join(lines)
+    if re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}", text):
+        score += 0.45
+    if re.search(r"(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}", text):
+        score += 0.3
+    if re.search(r"\b[A-Z][a-z]+ [A-Z][a-z]+\b", text):
+        score += 0.12
+    if re.search(r"(?m)^From:\s", text):
+        score += 0.1
+    if re.search(r"<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}>", text):
+        score += 0.08
+    return min(score, 1.0)
