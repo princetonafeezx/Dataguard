@@ -160,4 +160,8 @@ def parse_set_arguments(assignments: list[str]) -> dict:
 
     return updates
 
-    
+def resolve_contacts_min_confidence(cli_value: float | None, runtime_config: dict | None = None) -> float:
+    if cli_value is not None:
+        return float(cli_value)
+    cfg = runtime_config if runtime_config is not None else DEFAULT_CONFIG
+    return float(cfg.get("min_confidence_threshold", DEFAULT_CONFIG["min_confidence_threshold"]))
