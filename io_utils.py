@@ -16,3 +16,16 @@ class InputReadMetadata(TypedDict):
         path: str
     encoding: str
     read_warnings: list[str]
+
+def decode_bytes(raw_bytes: bytes) -> tuple[str, str, list[str]]:
+    warnings: list[str] = []
+    payload = raw_bytes
+    if payload.startswith(UTF8_BOM):
+        payload = payload[len(UTF8_BOM) :]
+        warnings.append("Stripped UTF-8 BOM marker before decoding input.")
+
+    try:
+        return payload.decode("utf-8"), "utf-8", warnings
+    except UnicodeDecodeError:
+        text = payload.decode("latin-1")
+        return text, "latin-1", warnings + [_LATIN1_FALLBACK_WARNING]
