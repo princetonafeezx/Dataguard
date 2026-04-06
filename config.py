@@ -24,5 +24,7 @@ DEFAULT_CONFIG = {
 
 _KNOWN_KEYS = frozenset(DEFAULT_CONFIG)
 
-
+def get_config_path(cwd: str | None = None) -> Path:
+    base_path = Path(cwd or Path.cwd())
+    return base_path / CONFIG_FILE_NAME
 
