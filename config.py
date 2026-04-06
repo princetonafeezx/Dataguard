@@ -165,3 +165,22 @@ def resolve_contacts_min_confidence(cli_value: float | None, runtime_config: dic
         return float(cli_value)
     cfg = runtime_config if runtime_config is not None else DEFAULT_CONFIG
     return float(cfg.get("min_confidence_threshold", DEFAULT_CONFIG["min_confidence_threshold"]))
+
+def persist_config_updates(updates: dict, cwd: str | None = None) -> tuple[dict, list[str]]:
+    coerced: dict[str, object] = {}
+    for key, raw in updates.items():
+        if key not in _KNOWN_KEYS:
+            valid = ", ".join(sorted(_KNOWN_KEYS))
+            raise InputError(f"Unknown config key {key!r}. Valid keys: {valid}.")
+        try:
+            coerced[key] = coerce_config_value(key, raw)
+        except (TypeError, ValueError) as exc:
+            raise InputError(f"Invalid value for config key {key!r}: {exc}") from exc
+
+    config, config_path, load_warnings = load_config(cwd)
+    config.update(coerced)
+
+    with config_path.open("w", encoding="utf-8") as handle:
+        json.dump(config, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+    return config, load_warnings
