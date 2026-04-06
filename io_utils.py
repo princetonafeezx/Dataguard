@@ -43,3 +43,16 @@ def read_text_file(path: str) -> tuple[str, InputReadMetadata]:
 
 def stdin_has_data() -> bool:
     return not sys.stdin.isatty()
+
+def _read_stdin_decoded() -> tuple[str, str, list[str]]:
+    try:
+        buf = sys.stdin.buffer
+    except AttributeError as exc:
+        raise InputError(
+            "Standard input does not expose a binary buffer in this environment."
+        ) from exc
+    try:
+        raw = buf.read()
+    except OSError as exc:
+        raise InputError("Could not read standard input.") from exc
+    return decode_bytes(raw)
