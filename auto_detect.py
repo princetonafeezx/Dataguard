@@ -7,7 +7,6 @@ import io
 import os
 import re
 
-# Map file extensions to the module that should be used to process them
 EXTENSION_TO_MODULE = {
     ".log": "logs",
     ".csv": "csv",
@@ -18,10 +17,28 @@ EXTENSION_TO_MODULE = {
 
 MODULE_PRIORITY = ["logs", "csv", "html", "contacts", "audit", "sanitize"]
 
-# Word-boundary HTTP methods (avoids matching "TARGETED", "wget", etc.)
 _HTTP_METHOD_RE = re.compile(
     r"\b(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\b",
 )
 
 _SAMPLE_MAX_SCAN = 250
 _SAMPLE_MAX_NONEMPTY = 35
+
+def sample_lines(text: str) -> list[str]:
+    """Prefer non-empty, non-comment lines up to limits; fall back to raw prefix if sample is empty."""
+    sampled: list[str] = []
+    scanned = 0
+    for line in text.splitlines():
+        scanned += 1
+        if scanned > _SAMPLE_MAX_SCAN:
+            break
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        sampled.append(line)
+        if len(sampled) >= _SAMPLE_MAX_NONEMPTY:
+            break
+    if sampled:
+        return sampled
+    raw = text.splitlines()[:25]
+    return raw
