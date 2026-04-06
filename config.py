@@ -95,3 +95,16 @@ def coerce_config_value(key: str, value: object) -> object:
         coerced = value
 
     return _constrain_config_value(key, coerced)
+
+def _merge_loaded_dict(base: dict, loaded: dict) -> tuple[dict, list[str]]:
+    warnings: list[str] = []
+    out = dict(base)
+    for key, raw in loaded.items():
+        if key not in _KNOWN_KEYS:
+            warnings.append(f"Ignored unknown config key {key!r}.")
+            continue
+        try:
+            out[key] = coerce_config_value(key, raw)
+        except (TypeError, ValueError) as exc:
+            raise InputError(f"Invalid value for config key {key!r}: {exc}") from exc
+    return out, warnings
