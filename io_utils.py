@@ -56,3 +56,16 @@ def _read_stdin_decoded() -> tuple[str, str, list[str]]:
     except OSError as exc:
         raise InputError("Could not read standard input.") from exc
     return decode_bytes(raw)
+
+def read_input_text(file_path: str | None = None, use_stdin: bool = False) -> tuple[str, InputReadMetadata]:
+    if file_path:
+        return read_text_file(file_path)
+    if use_stdin or stdin_has_data():
+        text, encoding, warnings = _read_stdin_decoded()
+        metadata: InputReadMetadata = {
+            "path": "<stdin>",
+            "encoding": encoding,
+            "read_warnings": warnings,
+        }
+        return text, metadata
+    raise InputError("No input provided. Use --file, --input, or pipe data through stdin.")
