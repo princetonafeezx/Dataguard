@@ -74,4 +74,9 @@ def _parsed_column_counts(lines: list[str], delimiter: str) -> list[int]:
         counts.append(len(row))
     return counts
 
-    
+def _row_cells(line: str, delimiter: str) -> list[str]:
+    try:
+        return list(next(csv.reader(io.StringIO(line.strip(), newline=""), delimiter=delimiter)))
+    except (csv.Error, StopIteration):
+        return []
+
