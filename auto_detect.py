@@ -176,3 +176,44 @@ def score_as_plain_text(lines: list[str]) -> float:
     if re.search(r"[\u200b\u200c\u200d\u2060]", text):
         return 0.8
     return 0.35
+
+def detect_module(text: str, file_path: str | None = None) -> dict:
+    lines = sample_lines(text)
+    csv_s = score_as_csv(lines)
+    html_s = score_as_html(lines)
+    scores = {
+        "logs": score_as_log(lines),
+        "csv": csv_s,
+        "html": html_s,
+        "contacts": score_as_contacts(lines),
+        "audit": score_as_passwords(lines, csv_score=csv_s, html_score=html_s),
+        "sanitize": score_as_plain_text(lines),
+    }
+
+    if file_path:
+        extension = os.path.splitext(file_path)[1].lower()
+        if extension in EXTENSION_TO_MODULE:
+            scores[EXTENSION_TO_MODULE[extension]] = max(scores[EXTENSION_TO_MODULE[extension]], 0.9)
+
+    sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    best_module, best_score = sorted_scores[0]
+    second_module, second_score = sorted_scores[1]
+
+    notes: list[str] = []
+    if best_score < 0.3:
+        notes.append("No module cleared the confidence threshold, falling back to sanitize.")
+        best_module = "sanitize"
+    elif best_score - second_score <= 0.1:
+        tied = {name for name, score in sorted_scores if best_score - score <= 0.1}
+        notes.append(
+            "Close detection scores between "
+            + ", ".join(sorted(tied))
+            + "; priority ordering was used to break the tie."
+        )
+        for candidate in MODULE_PRIORITY:
+            if candidate in tied:
+                best_module = candidate
+                break
+
+    reason = f"Detected {best_module} with confidence {scores[best_module]:.2f}"
+    return {"module": best_module, "scores": scores, "reason": reason, "notes": notes}
