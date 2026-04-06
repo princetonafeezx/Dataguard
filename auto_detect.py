@@ -135,3 +135,12 @@ def score_as_contacts(lines: list[str]) -> float:
     if re.search(r"<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}>", text):
         score += 0.08
     return min(score, 1.0)
+
+def score_as_passwords(lines: list[str], *, csv_score: float = 0.0, html_score: float = 0.0) -> float:
+    if not lines:
+        return 0.0
+    usable_lines = [line for line in lines if line.strip()]
+    if not usable_lines:
+        return 0.0
+    if len(usable_lines) < 3:
+        return 0.15
