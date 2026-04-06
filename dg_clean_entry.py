@@ -50,28 +50,11 @@ def _ensure_local_dataguard() -> None:
     sys.modules["dataguard"] = package
     spec.loader.exec_module(package)
 
+def main(argv: list[str] | None = None) -> int:
+    _ensure_local_dataguard()
+    from dataguard.cli import main as cli_main
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def main() -> int:
-    pass
+    return cli_main(argv)
 
 
 if __name__ == "__main__":
