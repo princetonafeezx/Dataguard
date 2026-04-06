@@ -25,7 +25,7 @@ _SAMPLE_MAX_SCAN = 250
 _SAMPLE_MAX_NONEMPTY = 35
 
 def sample_lines(text: str) -> list[str]:
-    """Prefer non-empty, non-comment lines up to limits; fall back to raw prefix if sample is empty."""
+    
     sampled: list[str] = []
     scanned = 0
     for line in text.splitlines():
@@ -42,3 +42,18 @@ def sample_lines(text: str) -> list[str]:
         return sampled
     raw = text.splitlines()[:25]
     return raw
+
+def score_as_log(lines: list[str]) -> float:
+    score = 0.0
+    line_count = max(len(lines), 1)
+    for line in lines:
+        if re.search(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", line):
+            score += 0.2
+        # Bracketed segment long enough to resemble a log timestamp, not just "[]"
+        if re.search(r"\[[^\]\n]{4,}\]", line):
+            score += 0.1
+        if _HTTP_METHOD_RE.search(line):
+            score += 0.2
+        if re.search(r"\b[1-5]\d{2}\b", line):
+            score += 0.1
+    return min(score / line_count, 1.0)
