@@ -56,3 +56,42 @@ def _constrain_config_value(key: str, value: object) -> object:
             raise ValueError("cannot be empty")
         return s
     return value
+
+def coerce_config_value(key: str, value: object) -> object:
+    default = DEFAULT_CONFIG[key]
+
+    if type(default) is bool:
+        if type(value) is bool:
+            coerced = value
+        elif isinstance(value, str):
+            low = value.strip().lower()
+            if low in ("true", "1", "yes", "on"):
+                coerced = True
+            elif low in ("false", "0", "no", "off"):
+                coerced = False
+            else:
+                raise ValueError(f"expected a boolean, got {value!r}")
+        elif type(value) is int:
+            coerced = value != 0
+        else:
+            raise TypeError(f"expected boolean-like value, got {type(value).__name__}")
+
+    elif type(default) is int:
+        if type(value) is bool:
+            raise TypeError("expected integer, not boolean")
+        if isinstance(value, float) and not value.is_integer():
+            raise TypeError("expected a whole number")
+        coerced = int(value)
+
+    elif type(default) is float:
+        if type(value) is bool:
+            raise TypeError("expected number, not boolean")
+        coerced = float(value)
+
+    elif isinstance(default, str):
+        coerced = str(value).strip()
+
+    else:
+        coerced = value
+
+    return _constrain_config_value(key, coerced)
