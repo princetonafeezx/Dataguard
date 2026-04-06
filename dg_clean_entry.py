@@ -4,6 +4,42 @@ import importlib.util
 import sys
 from pathlib import Path
 
+def _loaded_dataguard_package_root(module: object) -> Path | None:
+    init_file = getattr(module, "__file__", None)
+    if init_file:
+        try:
+            return Path(init_file).resolve().parent
+        except OSError:
+            return None
+    paths = getattr(module, "__path__", None)
+    if paths:
+        try:
+            return Path(next(iter(paths))).resolve()
+        except (OSError, StopIteration):
+            return None
+    return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
