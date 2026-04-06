@@ -144,3 +144,35 @@ def score_as_passwords(lines: list[str], *, csv_score: float = 0.0, html_score: 
         return 0.0
     if len(usable_lines) < 3:
         return 0.15
+
+    score = 0.0
+    simple_lines = sum(
+        1
+        for line in usable_lines
+        if len(line.split()) == 1 and "@" not in line and "<" not in line and not line.strip().startswith("#")
+    )
+    if simple_lines / len(usable_lines) >= 0.75:
+        score += 0.35
+    if any(re.search(r"[A-Z]", line) and re.search(r"\d", line) for line in usable_lines):
+        score += 0.2
+    if all("," not in line and ";" not in line and "\t" not in line and "|" not in line for line in usable_lines):
+        score += 0.15
+    if all(len(line) <= 64 for line in usable_lines):
+        score += 0.15
+
+    score = min(score, 1.0)
+    if csv_score >= 0.5:
+        score *= 0.4
+    elif csv_score >= 0.35:
+        score *= 0.65
+    if html_score >= 0.55:
+        score *= 0.45
+    return min(score, 1.0)
+
+def score_as_plain_text(lines: list[str]) -> float:
+    text = "\n".join(lines)
+    if not text.strip():
+        return 0.0
+    if re.search(r"[\u200b\u200c\u200d\u2060]", text):
+        return 0.8
+    return 0.35
